@@ -1,52 +1,52 @@
-## People Counter
-
-import time
-import picamera
+##Contador de personas
+##Federico Mejia
 import numpy as np
 import cv2
+import Person
+import time
 import datetime
 import psycopg2
 from mydb import add_field
 from picamera.array import PiRGBArray
 from picamera import PiCamera
-import Person
 
-# Database manager
+#Database manager
 conn = psycopg2.connect('dbname=peoplecounterdb')
 cur = conn.cursor()
 
-# Input - Output Registers
+#def peopleCounter(env,start_response):
+#  start_response('200 OK',[('Content-Type','text/html')])
+
+#Contadores de entrada y salida
 cnt_up   = 0
 cnt_down = 0
 
-#
-w = 640
-h = 480
-frameArea = h*w
-areaTH = frameArea/250
-print 'Area Threshold', areaTH
-
-# Video Source :
-# PiCamera
 camera = PiCamera()
-camera.resolution = (w, h)
-camera.framerate = 24
-rawCapture = PiRGBArray(camera, size=(w,h))
-# Allow the camera to warmup
-time.sleep(2)
-#  cap = np.empty((frameArea*3,), dtype=np.uint8)
-#  camera.capture(cap,'bgr')
-#  cap = cap.reshape((h, w, 3))
+camera.resolution = (640, 480)
+camera.framerate = 32
+rawCapture = PiRGBArray(camera)
 
-# USB Camera
+# allow the camera to warmup
+time.sleep(0.1)
+
+
+# Video Source
 # cap = cv2.VideoCapture(0)
-
-# Pre-recorded Video
 # cap = cv2.VideoCapture('peopleCounter.avi')
 
 #Propiedades del video
 ##cap.set(3,160) #Width
 ##cap.set(4,120) #Height
+
+#Imprime las propiedades de captura a consola
+for i in range(19):
+ print i, camera.get(i)
+
+w = camera.get(3)
+h = camera.get(4)
+frameArea = h*w
+areaTH = frameArea/250
+print 'Area Threshold', areaTH
 
 #Lineas de entrada/salida
 line_up = int(2*(h/5))
@@ -93,10 +93,16 @@ pid = 1
 
 #while(cap.isOpened()):
 
-for frame in camera.capture_continuous(rawCapture, format="bgr", use_video_port=True):
+for image in camera.capture_continuous(rawCapture, format="bgr", use_video_port=True):
     #Lee una imagen de la fuente de video
     #ret, frame = cap.read()
-    image = frame.array
+    ret,frame = image.array
+
+	# show the frame
+	cv2.imshow("Frame", frame)
+
+	# clear the stream in preparation for the next frame
+	rawCapture.truncate(0)
 
     for i in persons:
         i.age_one() #age every person one frame
@@ -105,8 +111,8 @@ for frame in camera.capture_continuous(rawCapture, format="bgr", use_video_port=
       #########################
 
     #Aplica substraccion de fondo
-    fgmask = fgbg.apply(image)
-    fgmask2 = fgbg.apply(image)
+    fgmask = fgbg.apply(frame)
+    fgmask2 = fgbg.apply(frame)
 
     #Binariazcion para eliminar sombras (color gris)
     try:
@@ -181,8 +187,8 @@ for frame in camera.capture_continuous(rawCapture, format="bgr", use_video_port=
             #################
             #   DIBUJOS     #
             #################
-            cv2.circle(image,(cx,cy), 5, (0,0,255), -1)
-            img = cv2.rectangle(image,(x,y),(x+w,y+h),(0,255,0),2)
+            cv2.circle(frame,(cx,cy), 5, (0,0,255), -1)
+            img = cv2.rectangle(frame,(x,y),(x+w,y+h),(0,255,0),2)
             #cv2.drawContours(frame, cnt, -1, (0,255,0), 3)
 
     #END for cnt in contours0
@@ -197,30 +203,27 @@ for frame in camera.capture_continuous(rawCapture, format="bgr", use_video_port=
 ##            frame = cv2.polylines(frame,[pts],False,i.getRGB())
 ##        if i.getId() == 9:
 ##            print str(i.getX()), ',', str(i.getY())
-        cv2.putText(image, str(i.getId()),(i.getX(),i.getY()),font,0.3,i.getRGB(),1,cv2.LINE_AA)
+        cv2.putText(frame, str(i.getId()),(i.getX(),i.getY()),font,0.3,i.getRGB(),1,cv2.LINE_AA)
 
     #################
     #   IMAGANES    #
     #################
     str_up = 'UP: '+ str(cnt_up)
     str_down = 'DOWN: '+ str(cnt_down)
-    image = cv2.polylines(image,[pts_L1],False,line_down_color,thickness=2)
-    image = cv2.polylines(image,[pts_L2],False,line_up_color,thickness=2)
-    image = cv2.polylines(image,[pts_L3],False,(255,255,255),thickness=1)
-    image = cv2.polylines(image,[pts_L4],False,(255,255,255),thickness=1)
-    cv2.putText(image, str_up ,(10,40),font,0.5,(255,255,255),2,cv2.LINE_AA)
-    cv2.putText(image, str_up ,(10,40),font,0.5,(0,0,255),1,cv2.LINE_AA)
-    cv2.putText(image, str_down ,(10,90),font,0.5,(255,255,255),2,cv2.LINE_AA)
-    cv2.putText(image, str_down ,(10,90),font,0.5,(255,0,0),1,cv2.LINE_AA)
+    frame = cv2.polylines(frame,[pts_L1],False,line_down_color,thickness=2)
+    frame = cv2.polylines(frame,[pts_L2],False,line_up_color,thickness=2)
+    frame = cv2.polylines(frame,[pts_L3],False,(255,255,255),thickness=1)
+    frame = cv2.polylines(frame,[pts_L4],False,(255,255,255),thickness=1)
+    cv2.putText(frame, str_up ,(10,40),font,0.5,(255,255,255),2,cv2.LINE_AA)
+    cv2.putText(frame, str_up ,(10,40),font,0.5,(0,0,255),1,cv2.LINE_AA)
+    cv2.putText(frame, str_down ,(10,90),font,0.5,(255,255,255),2,cv2.LINE_AA)
+    cv2.putText(frame, str_down ,(10,90),font,0.5,(255,0,0),1,cv2.LINE_AA)
 
-    cv2.imshow('Frame',image)
+    cv2.imshow('Frame',frame)
     #cv2.imshow('Mask',mask)
 
     #preisonar ESC para salir
     k = cv2.waitKey(5) & 0xff
-
-    rawCapture.truncate(0)
-
     if k == 27:
         break
 #END while(cap.isOpened())
@@ -228,5 +231,5 @@ for frame in camera.capture_continuous(rawCapture, format="bgr", use_video_port=
 #################
 #   LIMPIEZA    #
 #################
-cap.release()
+camera.release()
 cv2.destroyAllWindows()
