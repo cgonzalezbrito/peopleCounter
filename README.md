@@ -54,4 +54,4 @@ $pip3 install "picamera[array]"
 
 ### OpenCV Installation
 
-$ pip3 install opencv-contrib-python==4.1.0.25  
+$ pip3 install opencv-contrib-python
