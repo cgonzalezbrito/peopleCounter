@@ -53,5 +53,43 @@ Install the PiCamera API
 $pip3 install "picamera[array]"  
 
 ### OpenCV Installation
+$ cd ~
+$ wget -O opencv.zip https://github.com/opencv/opencv/archive/4.5.1.zip
+$ wget -O opencv_contrib.zip https://github.com/opencv/opencv_contrib/archive/4.5.1.zip
+$ unzip opencv.zip
+$ unzip opencv_contrib.zip
+$ mv opencv-4.5.1 opencv
+$ mv opencv_contrib-4.5.1 opencv_contrib
 
-$ pip3 install opencv-contrib-python
+ Edit the CONF_SWAPSIZ  variable in /etc/dphys-swapfile 
+CONF_SWAPSIZE=2048
+
+$ sudo /etc/init.d/dphys-swapfile stop
+$ sudo /etc/init.d/dphys-swapfile start
+
+for work in Virtual Enviroment
+$ workon cv
+
+Install numpy
+$ pip install numpy
+
+configure build
+$ cd ~/opencv
+$ mkdir build
+$ cd build
+$ cmake -D CMAKE_BUILD_TYPE=RELEASE \
+    -D CMAKE_INSTALL_PREFIX=/usr/local \
+    -D OPENCV_EXTRA_MODULES_PATH=~/opencv_contrib/modules \
+    -D ENABLE_NEON=ON \
+    -D ENABLE_VFPV3=ON \
+    -D BUILD_TESTS=OFF \
+    -D INSTALL_PYTHON_EXAMPLES=OFF \
+    -D OPENCV_ENABLE_NONFREE=ON \
+    -D CMAKE_SHARED_LINKER_FLAGS=-latomic \
+    -D BUILD_EXAMPLES=OFF ..
+
+$ make -j4
+
+$ sudo make install
+$ sudo ldconfig
+
