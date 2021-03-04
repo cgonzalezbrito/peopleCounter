@@ -1,18 +1,17 @@
 ##Contador de personas
-##Federico Mejia
 import numpy as np
 import cv2
 import Person
 import time
 import datetime
-import psycopg2
+#import psycopg2
 from mydb import add_field
 from picamera.array import PiRGBArray
 from picamera import PiCamera
 
 #Database manager
-conn = psycopg2.connect('dbname=peoplecounterdb')
-cur = conn.cursor()
+#conn = psycopg2.connect('dbname=peoplecounterdb')
+#cur = conn.cursor()
 
 #def peopleCounter(env,start_response):
 #  start_response('200 OK',[('Content-Type','text/html')])
@@ -40,13 +39,13 @@ time.sleep(0.1)
 
 #Imprime las propiedades de captura a consola
 for i in range(19):
- print i, camera.get(i)
+    print(i, camera.get(i))
 
 w = camera.get(3)
 h = camera.get(4)
 frameArea = h*w
 areaTH = frameArea/250
-print 'Area Threshold', areaTH
+print('Area Threshold', areaTH)
 
 #Lineas de entrada/salida
 line_up = int(2*(h/5))
@@ -55,8 +54,8 @@ line_down   = int(3*(h/5))
 up_limit =   int(1*(h/5))
 down_limit = int(4*(h/5))
 
-print "Red line y:",str(line_down)
-print "Blue line y:", str(line_up)
+print("Red line y:",str(line_down))
+print("Blue line y:", str(line_up))
 line_down_color = (255,0,0)
 line_up_color = (0,0,255)
 pt1 =  [0, line_down];
@@ -97,19 +96,20 @@ for image in camera.capture_continuous(rawCapture, format="bgr", use_video_port=
     #Lee una imagen de la fuente de video
     #ret, frame = cap.read()
     ret,frame = image.array
-
-	# show the frame
-	cv2.imshow("Frame", frame)
-
-	# clear the stream in preparation for the next frame
-	rawCapture.truncate(0)
+    
+    # show the frame
+    cv2.imshow("Frame", frame)
+    
+    # clear the stream in preparation for the next frame
+    rawCapture.truncate(0)
 
     for i in persons:
         i.age_one() #age every person one frame
-      #########################
-      #   PRE-PROCESAMIENTO   #
-      #########################
 
+    #########################
+    #   PRE-PROCESAMIENTO   #
+    #########################
+      
     #Aplica substraccion de fondo
     fgmask = fgbg.apply(frame)
     fgmask2 = fgbg.apply(frame)
@@ -126,8 +126,8 @@ for image in camera.capture_continuous(rawCapture, format="bgr", use_video_port=
         mask2 = cv2.morphologyEx(mask2, cv2.MORPH_CLOSE, kernelCl)
     except:
         print('EOF')
-        print 'UP:',cnt_up
-        print 'DOWN:',cnt_down
+        print('UP:',cnt_up)
+        print('DOWN:',cnt_down)
         break
 
     #################
@@ -159,13 +159,13 @@ for image in camera.capture_continuous(rawCapture, format="bgr", use_video_port=
                         i.updateCoords(cx,cy)   #actualiza coordenadas en el objeto and resets age
                         if i.going_UP(line_down,line_up) == True:
                             cnt_up += 1;
-                            print "ID:",i.getId(),'crossed going up at',time.strftime("%c")
+                            print("ID:",i.getId(),'crossed going up at',time.strftime("%c"))
                             date = datetime.datetime.today().strftime("%Y%m%d")
                             hour = datetime.datetime.today().strftime("%H%M%S")
                             add_field(date,hour,cnt_up,cnt_down)
                         elif i.going_DOWN(line_down,line_up) == True:
                             cnt_down += 1;
-                            print "ID:",i.getId(),'crossed going down at',time.strftime("%c")
+                            print("ID:",i.getId(),'crossed going down at',time.strftime("%c"))
                             date = datetime.datetime.today().strftime("%Y%m%d")
                             hour = datetime.datetime.today().strftime("%H%M%S")
                             add_field(date,hour,cnt_up,cnt_down)
@@ -202,7 +202,7 @@ for image in camera.capture_continuous(rawCapture, format="bgr", use_video_port=
 ##            pts = pts.reshape((-1,1,2))
 ##            frame = cv2.polylines(frame,[pts],False,i.getRGB())
 ##        if i.getId() == 9:
-##            print str(i.getX()), ',', str(i.getY())
+##            print(str(i.getX()), ',', str(i.getY()))
         cv2.putText(frame, str(i.getId()),(i.getX(),i.getY()),font,0.3,i.getRGB(),1,cv2.LINE_AA)
 
     #################
